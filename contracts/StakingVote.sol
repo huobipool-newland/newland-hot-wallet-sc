@@ -27,23 +27,6 @@ contract StakingVote is IStakingVote{
         _;
     }
 
-//    constructor(address _underlying,
-//        uint _lockPeriod,
-//        uint _slotCount,
-//        uint _voteAddMin,
-//        uint _voteSubMin,
-//        uint _candidateCountMax,
-//        uint _candidateStakingAmount){
-//            chairperson = msg.sender;
-//            underlying = _underlying;
-//            lockPeriod = _lockPeriod;
-//            slotCount = _slotCount;
-//            voteAddMin = _voteAddMin;
-//            voteSubMin = _voteSubMin;
-//            candidateCountMax = _candidateCountMax;
-//            candidateStakingAmount = _candidateStakingAmount;
-//    }
-
     function initialize(address _underlying,
         uint _lockPeriod,
         uint _slotCount,
@@ -63,6 +46,7 @@ contract StakingVote is IStakingVote{
     }
 
     function resetChairperson(address payable newChairperson) external override validChairperson{
+        require(newChairperson != address(0), "newChairperson is the zero address");
         address oldChairperson = chairperson;
         chairperson = newChairperson;
         emit ResetChairperson(oldChairperson, newChairperson);
@@ -219,8 +203,6 @@ contract StakingVote is IStakingVote{
 
         Locker storage candidateLocker = candidateLockerMapping[msg.sender];
         candidateLocker.lockUnderlying = 0;
-        candidateLocker.startBlockNum = block.number;
-        candidateLocker.endBlockNum = block.number;
 
         IERC20(underlying).safeTransfer(msg.sender, totalClaim);
 
@@ -237,8 +219,6 @@ contract StakingVote is IStakingVote{
             if(block.number >= voterLocker.endBlockNum && voterLocker.lockUnderlying >0){
                 totalClaim = totalClaim.add(voterLocker.lockUnderlying);
                 voterLocker.lockUnderlying = 0;
-                voterLocker.startBlockNum = block.number;
-                voterLocker.endBlockNum = block.number;
                 slot.usedSlotCount = slot.usedSlotCount.sub(1);
             }
         }
@@ -301,26 +281,11 @@ contract StakingVote is IStakingVote{
         return (candidate.legal,candidate.totalVote);
     }
 
-//    function candidateLockerInfo(address candidate) public view override returns(uint,uint,uint){
-//        Locker storage candidateLocker = candidateLockerMapping[candidate];
-//        return(candidateLocker.lockUnderlying,candidateLocker.startBlockNum,candidateLocker.endBlockNum);
-//    }
-
-//    function voterInfo(address voter) public view override returns(uint,uint){
-//        return (voterMapping[voter].totalUnderlying,voterMapping[voter].totalVote);
-//    }
-
-//    function candidateVoterInfo(address candidate,address _voter) public view override returns(uint){
-//        return candidateVoterMapping[candidate][_voter];
-//    }
 
     function candidatesLength() public view override returns (uint) {
         return candidates.length;
     }
 
-//    function candidatePid(address candidate) public view override returns (uint) {
-//        return candidatePidMapping[candidate];
-//    }
 
     function voterViableSlotCount(address voter) public view override returns (uint) {
         VoterLockerSlot storage slot = voterLockerSlotMapping[voter];
